@@ -270,7 +270,7 @@ impl Source for GlyphsIrSource {
 fn try_name_id(name: &str) -> Option<NameId> {
     match name {
         "copyrights" => Some(NameId::COPYRIGHT_NOTICE),
-        "familyNames" => Some(NameId::FAMILY_NAME),
+        "familyNames" => Some(NameId::TYPOGRAPHIC_FAMILY_NAME),
         "uniqueID" => Some(NameId::UNIQUE_ID),
         "postscriptFullName" => Some(NameId::FULL_NAME),
         "version" => Some(NameId::VERSION_STRING),
@@ -305,6 +305,12 @@ fn names(font: &Font) -> HashMap<NameKey, String> {
         .vendor_id()
         .map(|v| v.as_str())
         .unwrap_or(DEFAULT_VENDOR_ID);
+
+    let default_master = font.default_master();
+    if default_master.name != "Regular" {
+        builder.add(NameId::TYPOGRAPHIC_SUBFAMILY_NAME, default_master.name.clone());
+    }
+
     builder.apply_default_fallbacks(vendor);
 
     builder.into_inner()
@@ -1459,7 +1465,7 @@ mod tests {
                 ),
                 (
                     NameKey::new_bmp_only(NameId::SUBFAMILY_NAME),
-                    String::from("Regular")
+                    String::from("Bold")
                 ),
                 (
                     NameKey::new_bmp_only(NameId::UNIQUE_ID),

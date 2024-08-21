@@ -1963,7 +1963,8 @@ impl Instance {
             value
                 .weight_class
                 .as_ref()
-                .map(|v| f64::from_str(v).unwrap()),
+                .map(|v| f64::from_str(v).unwrap())
+                .or(Some(400.0)),
         );
         add_mapping_if_present(
             &mut axis_mappings,
@@ -1973,7 +1974,8 @@ impl Instance {
             value
                 .width_class
                 .as_ref()
-                .map(|v| f64::from_str(v).unwrap()),
+                .map(|v| f64::from_str(v).unwrap())
+                .or(Some(100.0)),
         );
 
         Instance {

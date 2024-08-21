@@ -734,31 +734,38 @@ fn names(font_info: &norad::FontInfo) -> HashMap<NameKey, String> {
 
     // Name's that get individual fields
     builder.add_if_present(NameId::COPYRIGHT_NOTICE, &font_info.copyright);
+    if let Some(style_map_family_name) = font_info.style_map_family_name.as_ref() {
+        builder.add(NameId::FAMILY_NAME, style_map_family_name.clone());
+    }
+    if let Some(style_map_style_name) = font_info.style_map_style_name.as_ref() {
+        builder.add(
+            NameId::SUBFAMILY_NAME,
+            match style_map_style_name {
+                StyleMapStyle::Regular => "Regular",
+                StyleMapStyle::Italic => "Italic",
+                StyleMapStyle::Bold => "Bold",
+                StyleMapStyle::BoldItalic => "Bold Italic",
+            }
+            .into(),
+        );
+    }
+    builder.add_if_present(NameId::UNIQUE_ID, &font_info.open_type_name_unique_id);
+    builder.add_if_present(NameId::VERSION_STRING, &font_info.open_type_name_version);
     builder.add_if_present(
-        NameId::FAMILY_NAME,
+        NameId::TYPOGRAPHIC_FAMILY_NAME,
         &font_info
-            .style_map_family_name
+            .open_type_name_preferred_family_name
             .as_ref()
             .or(font_info.family_name.as_ref())
             .cloned(),
     );
     builder.add_if_present(
-        NameId::SUBFAMILY_NAME,
-        &font_info.style_map_style_name.as_ref().map(|s| {
-            match s {
-                norad::fontinfo::StyleMapStyle::Regular => "Regular",
-                norad::fontinfo::StyleMapStyle::Italic => "Italic",
-                norad::fontinfo::StyleMapStyle::Bold => "Bold",
-                norad::fontinfo::StyleMapStyle::BoldItalic => "Bold Italic",
-            }
-            .into()
-        }),
-    );
-    builder.add_if_present(NameId::UNIQUE_ID, &font_info.open_type_name_unique_id);
-    builder.add_if_present(NameId::VERSION_STRING, &font_info.open_type_name_version);
-    builder.add_if_present(
-        NameId::TYPOGRAPHIC_FAMILY_NAME,
-        &font_info.open_type_name_preferred_family_name,
+        NameId::TYPOGRAPHIC_SUBFAMILY_NAME,
+        &font_info
+            .open_type_name_preferred_subfamily_name
+            .as_ref()
+            .or(font_info.style_name.as_ref())
+            .cloned(),
     );
     builder.add_if_present(NameId::POSTSCRIPT_NAME, &font_info.postscript_font_name);
     builder.add_if_present(NameId::TRADEMARK, &font_info.trademark);

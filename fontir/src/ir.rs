@@ -734,26 +734,13 @@ pub struct GlobalMetricsInstance {
 /// Helps accumulate 'name' values.
 ///
 /// See <https://github.com/googlefonts/ufo2ft/blob/fca66fe3ea1ea88ffb36f8264b21ce042d3afd05/Lib/ufo2ft/outlineCompiler.py#L367>.
+#[derive(Default)]
 pub struct NameBuilder {
     names: HashMap<NameKey, String>,
     /// Helps lookup entries in name when all we have is a NameId
     name_to_key: HashMap<NameId, NameKey>,
     version_major: i32,
     version_minor: u32,
-}
-
-impl Default for NameBuilder {
-    fn default() -> Self {
-        let mut builder = Self {
-            names: Default::default(),
-            name_to_key: Default::default(),
-            version_major: Default::default(),
-            version_minor: Default::default(),
-        };
-        // Based on diffing fontmake Oswald build
-        builder.add(NameId::SUBFAMILY_NAME, "Regular".to_string());
-        builder
-    }
 }
 
 impl NameBuilder {
@@ -806,14 +793,52 @@ impl NameBuilder {
     }
 
     pub fn apply_default_fallbacks(&mut self, vendor_id: &str) {
+        // https://github.com/googlefonts/ufo2ft/blob/bb79cae53f1c160c7174ebef0d463c7a28a7552a/Lib/ufo2ft/fontInfoData.py#L76
+        let style_map_style_names = ["regular", "bold", "italic", "bold italic"];
+        let style_name = self
+            .get(NameId::SUBFAMILY_NAME)
+            .or(self.get(NameId::TYPOGRAPHIC_SUBFAMILY_NAME))
+            .or(default_value(NameId::SUBFAMILY_NAME))
+            .unwrap()
+            .to_string();
+        let is_ribbi = style_map_style_names.contains(&style_name.to_lowercase().as_str());
+
+        // https://github.com/googlefonts/ufo2ft/blob/bb79cae53f1c160c7174ebef0d463c7a28a7552a/Lib/ufo2ft/fontInfoData.py#L57
+        let mut family_name = self
+            .get(NameId::FAMILY_NAME)
+            .or(self.get(NameId::TYPOGRAPHIC_FAMILY_NAME))
+            .or(default_value(NameId::FAMILY_NAME))
+            .unwrap()
+            .to_string();
+        if !is_ribbi {
+            family_name.push(' ');
+            family_name.push_str(&style_name);
+        }
+
+        self.add(NameId::FAMILY_NAME, family_name);
+        self.add(
+            NameId::SUBFAMILY_NAME,
+            if is_ribbi {
+                style_name
+            } else {
+                "Regular".to_string()
+            },
+        );
+
         // https://github.com/googlefonts/ufo2ft/blob/fca66fe3ea1ea88ffb36f8264b21ce042d3afd05/Lib/ufo2ft/fontInfoData.py#L188
-        self.apply_fallback(NameId::TYPOGRAPHIC_FAMILY_NAME, &[NameId::FAMILY_NAME]);
+        if !self.contains_key(NameId::TYPOGRAPHIC_FAMILY_NAME) {
+            self.apply_fallback(NameId::TYPOGRAPHIC_FAMILY_NAME, &[NameId::FAMILY_NAME]);
+        }
 
         // https://github.com/googlefonts/ufo2ft/blob/fca66fe3ea1ea88ffb36f8264b21ce042d3afd05/Lib/ufo2ft/fontInfoData.py#L195
-        self.apply_fallback(
-            NameId::TYPOGRAPHIC_SUBFAMILY_NAME,
-            &[NameId::SUBFAMILY_NAME],
-        );
+        if !self.contains_key(NameId::TYPOGRAPHIC_SUBFAMILY_NAME) {
+            self.apply_fallback(
+                NameId::TYPOGRAPHIC_SUBFAMILY_NAME,
+                &[NameId::SUBFAMILY_NAME],
+            );
+        }
+
+        println!("{:?}", self.names);
 
         // https://github.com/googlefonts/ufo2ft/blob/fca66fe3ea1ea88ffb36f8264b21ce042d3afd05/Lib/ufo2ft/fontInfoData.py#L169
         if !self.contains_key(NameId::VERSION_STRING) {
