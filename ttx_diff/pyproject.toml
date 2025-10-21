@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ttx-diff"
+version = "0.1.0"
+description = "A tool for comparing font compiler outputs (fontc vs fontmake)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Google Fonts", email = "fonts@google.com"}
+]
+keywords = ["fonts", "font-compilation", "fontc", "fontmake", "testing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Text Processing :: Fonts",
+]
+dependencies = [
+    "absl-py",
+    "fontmake[repacker]>=3.11.0",
+    "fonttools",
+    "lxml",
+    "cdifflib",
+    "glyphsLib",
+    "gftools>=0.9.74",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+]
+
+[project.urls]
+Homepage = "https://github.com/googlefonts/fontc"
+Repository = "https://github.com/googlefonts/fontc"
+Issues = "https://github.com/googlefonts/fontc/issues"
+
+[project.scripts]
+ttx-diff = "ttx_diff.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--strict-markers",
+]
+
+[tool.coverage.run]
+source = ["ttx_diff"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
