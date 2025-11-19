@@ -1,0 +1,212 @@
+{
+.appVersion = "3343";
+.formatVersion = 3;
+familyName = "Layer Reuse Test";
+fontMaster = (
+{
+id = m01;
+name = Regular;
+}
+);
+glyphs = (
+{
+glyphname = A;
+layers = (
+{
+attr = {
+color = 1;
+};
+layerId = m01;
+shapes = (
+{
+attr = {
+gradient = {
+colors = (
+(
+(255,0,0,255),
+0
+),
+(
+(255,128,0,255),
+1
+)
+);
+end = (0.9,0.9);
+start = (0.1,0.1);
+};
+};
+closed = 1;
+nodes = (
+(63,0,l),
+(342,0,l),
+(342,250,l),
+(63,250,l)
+);
+},
+{
+attr = {
+gradient = {
+colors = (
+(
+(0,0,255,255),
+0
+),
+(
+(0,128,255,255),
+1
+)
+);
+end = (0.9,0.9);
+start = (0.1,0.1);
+};
+};
+closed = 1;
+nodes = (
+(63,250,l),
+(342,250,l),
+(342,500,l),
+(63,500,l)
+);
+}
+);
+width = 600;
+}
+);
+unicode = 65;
+},
+{
+glyphname = B;
+layers = (
+{
+attr = {
+color = 1;
+};
+layerId = m01;
+shapes = (
+{
+attr = {
+gradient = {
+colors = (
+(
+(255,0,0,255),
+0
+),
+(
+(255,128,0,255),
+1
+)
+);
+end = (0.9,0.9);
+start = (0.1,0.1);
+};
+};
+closed = 1;
+nodes = (
+(63,0,l),
+(342,0,l),
+(342,250,l),
+(63,250,l)
+);
+},
+{
+attr = {
+gradient = {
+colors = (
+(
+(0,0,255,255),
+0
+),
+(
+(0,128,255,255),
+1
+)
+);
+end = (0.9,0.9);
+start = (0.1,0.1);
+};
+};
+closed = 1;
+nodes = (
+(63,250,l),
+(342,250,l),
+(342,500,l),
+(63,500,l)
+);
+}
+);
+width = 600;
+}
+);
+unicode = 66;
+},
+{
+glyphname = C;
+layers = (
+{
+attr = {
+color = 1;
+};
+layerId = m01;
+shapes = (
+{
+attr = {
+gradient = {
+colors = (
+(
+(255,0,0,255),
+0
+),
+(
+(255,128,0,255),
+1
+)
+);
+end = (0.9,0.9);
+start = (0.1,0.1);
+};
+};
+closed = 1;
+nodes = (
+(63,0,l),
+(342,0,l),
+(342,250,l),
+(63,250,l)
+);
+},
+{
+attr = {
+gradient = {
+colors = (
+(
+(0,0,255,255),
+0
+),
+(
+(0,128,255,255),
+1
+)
+);
+end = (0.9,0.9);
+start = (0.1,0.1);
+};
+};
+closed = 1;
+nodes = (
+(63,250,l),
+(342,250,l),
+(342,500,l),
+(63,500,l)
+);
+}
+);
+width = 600;
+}
+);
+unicode = 67;
+}
+);
+
+unitsPerEm = 1000;
+versionMajor = 1;
+versionMinor = 0;
+}

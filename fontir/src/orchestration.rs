@@ -42,6 +42,8 @@ bitflags! {
         const DECOMPOSE_COMPONENTS = 0b100000000;
         // If set, open corners will be erased (Glyphs-native feature)
         const ERASE_OPEN_CORNERS = 0b1000000000;
+        // If set, COLR layer reuse optimization is disabled
+        const NO_COLR_LAYER_REUSE = 0b10000000000;
     }
 }
 

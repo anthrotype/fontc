@@ -12,6 +12,7 @@ pub mod glyphs;
 pub mod gvar;
 pub mod head;
 pub mod hvar;
+pub mod layer_list;
 pub mod meta;
 pub mod metric_variations;
 pub mod metrics_and_limits;

@@ -97,6 +97,13 @@ pub struct Args {
     #[arg(long, default_value = "false")]
     pub no_production_names: bool,
 
+    /// Disable COLR layer reuse optimization
+    ///
+    /// By default, identical paint layer subsequences are deduplicated in COLRv1
+    /// tables. This flag disables that optimization.
+    #[arg(long, default_value = "false")]
+    pub no_colr_layer_reuse: bool,
+
     /// Print verbose version information for debugging
     // Includes fontc git commit, rustc host triple, rustc version and channel, llvm version,
     // cargo profile, and cargo optimization level.
@@ -135,6 +142,7 @@ impl Args {
         flags.set(Flags::EMIT_TIMING, self.emit_timing);
         flags.set(Flags::KEEP_DIRECTION, self.keep_direction);
         flags.set(Flags::PRODUCTION_NAMES, !self.no_production_names);
+        flags.set(Flags::NO_COLR_LAYER_REUSE, self.no_colr_layer_reuse);
 
         flags
     }
@@ -158,6 +166,7 @@ impl Args {
             skip_features: false,
             keep_direction: false,
             no_production_names: false,
+            no_colr_layer_reuse: false,
             verbose_version: false,
             log: None,
         }

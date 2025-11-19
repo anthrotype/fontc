@@ -2,6 +2,7 @@
 
 use crate::{
     error::{Error, GlyphProblem},
+    layer_list::LayerListBuilder,
     orchestration::{AnyWorkId, BeWork, Context, Glyph, WorkId},
 };
 use fontdrasil::{
@@ -10,14 +11,14 @@ use fontdrasil::{
 };
 use fontir::{
     ir::{self, ColorPalettes, GlyphOrder},
-    orchestration::WorkId as FeWorkId,
+    orchestration::{Flags, WorkId as FeWorkId},
 };
 use write_fonts::{
     tables::{
         colr::{
             BaseGlyph, BaseGlyphList, BaseGlyphPaint, Clip, ClipBox, ClipList, ColorLine,
-            ColorStop, Colr, Extend, Layer, LayerList, Paint, PaintColrLayers, PaintGlyph,
-            PaintLinearGradient, PaintRadialGradient, PaintSolid,
+            ColorStop, Colr, Extend, Layer, Paint, PaintGlyph, PaintLinearGradient,
+            PaintRadialGradient, PaintSolid,
         },
         glyf::Bbox,
     },
@@ -135,7 +136,7 @@ fn to_colr_paint(
     palette: &ColorPalettes,
     glyph_name: &GlyphName,
     bbox: &Bbox,
-    layer_list: &mut LayerList,
+    builder: &mut LayerListBuilder,
     ir_paint: &ir::Paint,
 ) -> Result<Paint, Error> {
     match ir_paint {
@@ -153,7 +154,7 @@ fn to_colr_paint(
                     palette,
                     &paint.name,
                     &bbox,
-                    layer_list,
+                    builder,
                     &paint.paint,
                 )?
                 .into(),
@@ -219,7 +220,8 @@ fn to_colr_paint(
             )))
         }
         ir::Paint::Layers(layers) => {
-            let start_idx = layer_list.num_layers;
+            // Convert all inner paints first
+            let mut paints = Vec::with_capacity(layers.len());
             for ir_paint in layers.iter() {
                 let paint = to_colr_paint(
                     context,
@@ -227,15 +229,13 @@ fn to_colr_paint(
                     palette,
                     glyph_name,
                     bbox,
-                    layer_list,
+                    builder,
                     ir_paint,
                 )?;
-                layer_list.paints.push(paint.into());
+                paints.push(paint);
             }
-            Ok(Paint::ColrLayers(PaintColrLayers::new(
-                layers.len() as u8,
-                start_idx,
-            )))
+            // Use LayerListBuilder to add with automatic reuse
+            Ok(builder.add_paint_layers(paints))
         }
     }
 }
@@ -351,7 +351,9 @@ impl Work<Context, AnyWorkId, Error> for ColrWork {
         let mut colr_v0_glyphs = Vec::new();
         let mut colr_v0_layers = Vec::new();
         let mut colr_v1_glyphs = Vec::with_capacity(paint_graph.base_glyphs.len());
-        let mut colr_v1_layers = LayerList::default();
+        // Enable layer reuse unless NO_COLR_LAYER_REUSE flag is set
+        let allow_layer_reuse = !context.flags.contains(Flags::NO_COLR_LAYER_REUSE);
+        let mut colr_v1_builder = LayerListBuilder::new(allow_layer_reuse);
         let mut clips = Vec::new();
 
         for glyph_name in glyph_order.names() {
@@ -404,7 +406,7 @@ impl Work<Context, AnyWorkId, Error> for ColrWork {
                         &palette,
                         glyph_name,
                         &bbox,
-                        &mut colr_v1_layers,
+                        &mut colr_v1_builder,
                         paint,
                     )?,
                 ));
@@ -432,9 +434,9 @@ impl Work<Context, AnyWorkId, Error> for ColrWork {
             colr.base_glyph_list =
                 BaseGlyphList::new(colr_v1_glyphs.len() as u32, colr_v1_glyphs).into();
         }
-        if !colr_v1_layers.paints.is_empty() {
-            colr_v1_layers.num_layers = colr_v1_layers.paints.len() as u32;
-            colr.layer_list = colr_v1_layers.into();
+        // Build the optimized LayerList with layer reuse
+        if let Some(layer_list) = colr_v1_builder.build() {
+            colr.layer_list = layer_list.into();
         }
         if !clips.is_empty() {
             colr.clip_list = ClipList::new(1, clips.len() as u32, clips).into();

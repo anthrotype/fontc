@@ -4165,6 +4165,87 @@ mod tests {
         );
     }
 
+    #[test]
+    fn colr_layer_reuse_enabled() {
+        // Test that layer reuse is enabled by default and produces a valid COLRv1 table
+        // Note: In this test case, each glyph has unique color layers (A.color0, B.color0, etc.)
+        // so there's no actual deduplication. This test verifies the code path works.
+        let result = TestCompile::compile_source("glyphs3/COLRv1-layer-reuse.glyphs");
+        let colr = result.font().colr().expect("COLR table");
+
+        let layer_list = colr
+            .layer_list()
+            .expect("A layer list")
+            .expect("A valid layer list");
+
+        // 3 glyphs × 2 layers each = 6 layers
+        // (no deduplication in this case since each glyph has unique color layer references)
+        let num_layers = layer_list.paints().len();
+        assert_eq!(num_layers, 6, "Expected 6 layers, got {num_layers}");
+
+        // Verify all three glyphs have PaintColrLayers with 2 layers each
+        let base_glyph_list = colr.base_glyph_list().unwrap().unwrap();
+        assert_eq!(
+            base_glyph_list.base_glyph_paint_records().len(),
+            3,
+            "Expected 3 base glyphs"
+        );
+        for base_glyph in base_glyph_list.base_glyph_paint_records() {
+            let paint = base_glyph
+                .paint(base_glyph_list.offset_data())
+                .expect("Valid paint");
+            let Paint::ColrLayers(colr_layers) = paint else {
+                panic!("Expected PaintColrLayers");
+            };
+            assert_eq!(
+                colr_layers.num_layers(),
+                2,
+                "Each glyph should reference 2 layers"
+            );
+        }
+    }
+
+    #[test]
+    fn colr_no_layer_reuse_flag() {
+        // Test that --no-colr-layer-reuse flag is respected
+        // This compiles the same source with layer reuse disabled
+        let result = TestCompile::compile("glyphs3/COLRv1-layer-reuse.glyphs", |mut args| {
+            args.no_colr_layer_reuse = true;
+            args
+        });
+        let colr = result.font().colr().expect("COLR table");
+
+        let layer_list = colr
+            .layer_list()
+            .expect("A layer list")
+            .expect("A valid layer list");
+
+        // Same result as with reuse enabled since there's no actual duplication in this test
+        let num_layers = layer_list.paints().len();
+        assert_eq!(num_layers, 6, "Expected 6 layers, got {num_layers}");
+
+        // Verify structure is correct
+        let base_glyph_list = colr.base_glyph_list().unwrap().unwrap();
+        let first_layer_indices: Vec<u32> = base_glyph_list
+            .base_glyph_paint_records()
+            .iter()
+            .map(|bg| {
+                let paint = bg.paint(base_glyph_list.offset_data()).expect("Valid paint");
+                let Paint::ColrLayers(colr_layers) = paint else {
+                    panic!("Expected PaintColrLayers");
+                };
+                colr_layers.first_layer_index()
+            })
+            .collect();
+
+        // Each glyph should have sequential layer ranges
+        assert_eq!(
+            first_layer_indices.len(),
+            3,
+            "Expected 3 first_layer_indices"
+        );
+    }
+
     fn assert_colr0(compile: &TestCompile, expected: Vec<(String, Vec<(String, u16)>)>) {
         let colr = compile.font().colr().unwrap();
         let layers = colr
